@@ -2,9 +2,15 @@ from constraints import *
 from time import sleep
 from PIL import Image, ImageDraw, ImageFont
 
-font = ImageFont.truetype("RobotoFlex-Regular.ttf", 12)
+white = "#FFFFFF"
+black = "#000000"
 
-scale = 8
+fg = black
+bg = white
+
+font = ImageFont.truetype("RobotoFlex-Regular.ttf", 18)
+
+scale = 16
 
 class Room:
 	def __init__(self, name=None, x=0, y=0, width=1, height=1):
@@ -19,16 +25,14 @@ class Room:
 	
 	def draw(self, img):
 		d = ImageDraw.Draw(img)
-		half_width = img.width / 2
-		half_height = img.height / 2
 		d.rectangle([
-			(half_width + self.x.value()*scale, half_height + self.y.value()*scale),
-			(half_width + (self.x.value() + self.width.value())*scale, half_height + (self.y.value() + self.height.value())*scale)
-		], outline="#FFFFFF")
+			(min_x + margin + self.x.value()*scale, min_y + margin + self.y.value()*scale),
+			(min_x + margin + (self.x.value() + self.width.value())*scale, min_y + margin + (self.y.value() + self.height.value())*scale)
+		], outline=fg)
 		if self.name is not None:
 			d.text(
-				(half_width + (self.x.value() + self.width.value()/2)*scale, half_height + (self.y.value() + self.height.value()/2)*scale),
-				self.name, fill="white", anchor="mm", font=font)
+				(min_x + margin +  + (self.x.value() + self.width.value()/2)*scale, min_y + margin + (self.y.value() + self.height.value()/2)*scale),
+				self.name, fill=fg, anchor="mm", font=font)
 
 class Dimension:
 	def __init__(self, x):
@@ -142,7 +146,20 @@ while not all(well_constrained):
 		constraint.adjust()
 	well_constrained = [constraint.check() for constraint in constraints]
 
-img = Image.new("RGB", (600, 600), (0,0,0))
+print([room.x.value() for room in rooms])
+print([room.x.value() + room.width.value() for room in rooms])
+
+min_x = min([room.x.value() for room in rooms])
+min_y = min([room.y.value() for room in rooms])
+max_x = max([room.x.value() + room.width.value() for room in rooms])
+max_y = max([room.y.value() + room.height.value() for room in rooms])
+
+margin = 2 * scale
+
+image_width = int((max_x - min_x) * scale + margin * 2)
+image_height = int((max_y - min_y) * scale + margin * 2)
+
+img = Image.new("RGB", (image_width, image_height), bg)
 for room in rooms:
 	print(room)
 	room.draw(img)
